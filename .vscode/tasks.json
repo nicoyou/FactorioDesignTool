@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Sort Imports",
+			"type": "shell",
+			"command": "${workspaceFolder}\\.venv\\Scripts\\isort",
+			"args": [
+				"${file}"
+			],
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "silent"
+			},
+		},
+	],
+}
