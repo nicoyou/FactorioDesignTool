@@ -1,5 +1,8 @@
 from typing import Final
 
+from .area import *
+from .define import *
+from .world import *
 
 __copyright__: Final[str] = "Copyright (C) 2024 Nicoyou"
 __version__: Final[str] = "1.0.0"
