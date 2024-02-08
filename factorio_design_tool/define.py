@@ -12,7 +12,6 @@ class Item(enum.Enum):
     crude_oil = enum.auto()     # 原油
     raw_fish = enum.auto()      # 生魚
     water = enum.auto()         # 水
-    steam = enum.auto()         # 蒸気
     uranium_ore = enum.auto()   # ウラン鉱石
 
     # 素材
@@ -31,7 +30,6 @@ class Item(enum.Enum):
     engine_unit = enum.auto()                   # エンジンユニット
     electric_engine_unit = enum.auto()          # 電気エンジンユニット
     explosives = enum.auto()                    # 爆薬
-    battery = enum.auto()                       # 電池
     flying_robot_frame = enum.auto()            # 飛行用ロボットフレーム
     automation_science_pack = enum.auto()       # 自動化サイエンスパック
     logistic_science_pack = enum.auto()         # 物流サイエンスパック
@@ -72,6 +70,8 @@ class Recipe():
         self.inputs = inputs
         self.outputs = outputs
         self.time = time
+        if len(outputs) <= 0:
+            raise ValueError("Output item is not found")
         return
 
 
@@ -84,17 +84,6 @@ class ItemData():
         }
         return
 
-
-RECIPES = [
-    Recipe([ItemIO(Item.iron_ore, 1)], [ItemIO(Item.iron_plate, 1)], 3.2),                                          # 鉄板
-    Recipe([ItemIO(Item.copper_ore, 1)], [ItemIO(Item.copper_plate, 1)], 3.2),                                      # 銅板
-    Recipe([ItemIO(Item.iron_plate, 5)], [ItemIO(Item.steel_plate, 1)], 16),                                        # 鋼材
-    Recipe([ItemIO(Item.steel_plate, 1)], [ItemIO(Item.empty_barrel, 1)], 1),                                       # 空のドラム缶
-    Recipe([ItemIO(Item.iron_plate, 1)], [ItemIO(Item.iron_stick, 2)], 0.5),                                        # 鉄筋
-    Recipe([ItemIO(Item.iron_plate, 2)], [ItemIO(Item.iron_gear_wheel, 1)], 0.5),                                   # 鉄の歯車
-    Recipe([ItemIO(Item.copper_plate, 1)], [ItemIO(Item.copper_cable, 2)], 0.5),                                    # 銅線
-    Recipe([ItemIO(Item.iron_plate, 1), ItemIO(Item.copper_cable, 3)], [ItemIO(Item.electronic_circuit, 1)], 0.5),  # 電子基板
-]
 
 # 全アイテムの情報を保持する辞書
 ITEM_DATA = {
@@ -146,3 +135,31 @@ ITEM_DATA = {
     Item.used_up_uranium_fuel_cell: ItemData("Used up uranium fuel cell", "使用済み核燃料棒"),
     Item.uranium_fuel_cell: ItemData("Uranium fuel cell", "核燃料棒"),
 }
+
+RECIPES = [
+                                                                                                                    # 資源採取系
+    Recipe([], [ItemIO(Item.coal, 1)], 2),                                                                          # 石炭
+    Recipe([], [ItemIO(Item.iron_ore, 1)], 2),                                                                      # 鉄鉱石
+    Recipe([], [ItemIO(Item.copper_ore, 1)], 2),                                                                    # 銅鉱石
+    Recipe([], [ItemIO(Item.stone, 1)], 2),                                                                         # 石
+    Recipe([], [ItemIO(Item.crude_oil, 2)], 1),                                                                     # 原油
+    Recipe([], [ItemIO(Item.water, 1200)], 1),                                                                      # 生魚
+
+                                                                                                                    # 素材加工系
+    Recipe([ItemIO(Item.iron_ore, 1)], [ItemIO(Item.iron_plate, 1)], 3.2),                                          # 鉄板
+    Recipe([ItemIO(Item.copper_ore, 1)], [ItemIO(Item.copper_plate, 1)], 3.2),                                      # 銅板
+    Recipe([ItemIO(Item.iron_plate, 5)], [ItemIO(Item.steel_plate, 1)], 16),                                        # 鋼材
+    Recipe([ItemIO(Item.steel_plate, 1)], [ItemIO(Item.empty_barrel, 1)], 1),                                       # 空のドラム缶
+    Recipe([ItemIO(Item.iron_plate, 1)], [ItemIO(Item.iron_stick, 2)], 0.5),                                        # 鉄筋
+    Recipe([ItemIO(Item.iron_plate, 2)], [ItemIO(Item.iron_gear_wheel, 1)], 0.5),                                   # 鉄の歯車
+    Recipe([ItemIO(Item.copper_plate, 1)], [ItemIO(Item.copper_cable, 2)], 0.5),                                    # 銅線
+    Recipe([ItemIO(Item.iron_plate, 1), ItemIO(Item.copper_cable, 3)], [ItemIO(Item.electronic_circuit, 1)], 0.5),  # 電子基板
+]
+
+
+def get_main_recipe(item: Item) -> Recipe:
+    for recipe in RECIPES:
+        for output in recipe.outputs:
+            if output.item == item:
+                return recipe
+    raise ValueError(f"Recipe not found for item {item}")

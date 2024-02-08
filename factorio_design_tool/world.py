@@ -19,15 +19,18 @@ class World():
         return area
 
     def export_factory_blueprint(self) -> None:
-        dot = graphviz.Digraph("recipe_tree", comment="Recipe", format="png", engine="dot")
+        dot = graphviz.Digraph("factory_design", comment="factorio factory design", format="png", engine="dot")
         dot.attr("graph", rankdir="BT")
         dot.attr("node", fontname="MS Gothic", shape="box")
         for area in self.areas:
             subgraph = graphviz.Digraph(name=f"cluster_{area.name}")
             subgraph.attr(label=area.name)
             subgraph.attr(color="grey")
-            for resource in area.resources:
-                subgraph.node(f"{area.name}_{resource.item}", f"{ITEM_DATA[resource.item].name[self.language]}: {resource.production_per_second}/s")
+            for resource in (area.resources + area.processes):          # ノードを設置する
+                subgraph.node(f"{resource.area_id}_{resource.item}",
+                              f"{ITEM_DATA[resource.item].name[self.language]}: {resource.production_per_second}/s (残: {resource.available_production_per_second}/s)")
+            for resource in area.resources:                             # エッジを出力する
+                resource.export_edge_to_dot(dot)
             dot.subgraph(subgraph)
         dot.render(directory="data", view=True)
         return
