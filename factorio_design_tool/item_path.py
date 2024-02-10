@@ -13,10 +13,12 @@ class ItemPath():
         self.area_id = area_id
         return
 
-    def export_edge_to_dot(self, dot) -> None:
+    def export_edge_to_dot(self, dot, ignore_node_ids: list) -> None:
         for child in self.children:
-            dot.edge(f"{self.area_id}_{self.item}", f"{child.item_path.area_id}_{child.item_path.item}", label=f"{child.amount}/s")
-            child.item_path.export_edge_to_dot(dot)
+            if (self.node_id, child.item_path.node_id) not in ignore_node_ids:  # 同一ノード同士のエッジを重複して出力しない
+                dot.edge(self.node_id, child.item_path.node_id, label=f"{child.amount}/s")
+                ignore_node_ids.append((self.node_id, child.item_path.node_id))
+            child.item_path.export_edge_to_dot(dot, ignore_node_ids)
         return
 
     def use_production_per_second(self, amount: float, children: list[Self]) -> float:
@@ -32,10 +34,15 @@ class ItemPath():
         return result_amount    # 使い切れなかった分を返す
 
     @property
+    def node_id(self) -> str:
+        return f"{self.area_id}_{self.item}"
+
+    @property
     def available_production_per_second(self) -> float:
         return self.production_per_second - self.used_production_per_second
 
 
+# 加工工程の子要素への参照を保持するクラス
 class ItemPathLink():
     def __init__(self, item_path: ItemPath, amount: float) -> None:
         self.item_path = item_path

@@ -4,11 +4,12 @@ from .item_path import ItemPath
 
 # ワールド内のエリアの情報を管理するクラス
 class Area():
-    def __init__(self, name: str) -> None:
-        self.name = name
-        self.resources: list[ItemPath] = []     # このエリアで得られる資源
-        self.inputs: list[ItemPath] = []        # 他のエリアで作られたアイテム
-        self.processes: list[ItemPath] = []     # このエリアで行われる加工工程
+    def __init__(self, name: str, mining_productivity: float) -> None:
+        self.name = name                                # エリア名
+        self.mining_productivity = mining_productivity  # 採掘量倍率
+        self.resources: list[ItemPath] = []             # このエリアで得られる資源
+        self.inputs: list[ItemPath] = []                # 他のエリアで作られたアイテム
+        self.processes: list[ItemPath] = []             # このエリアで行われる加工工程
         return
 
     def create_resource(self, recipe: Recipe, machine_num: int) -> ItemPath:
@@ -16,11 +17,14 @@ class Area():
             raise ValueError("Resource recipe has inputs")
         if len(recipe.outputs) != 1:
             raise ValueError("Resource recipe has multiple outputs")
-        resource = ItemPath(recipe.outputs[0].item, machine_num, self.name)
+        mag = 1.0
+        if recipe.outputs[0].item in (Item.coal, Item.iron_ore, Item.copper_ore, Item.stone, Item.uranium_ore):
+            mag *= self.mining_productivity
+        resource = ItemPath(recipe.outputs[0].item, (machine_num * recipe.outputs[0].amount * mag) / recipe.time, self.name)
         self.resources.append(resource)
         return resource
 
-    def set_processing_line(self, recipe: Recipe, machine_num: int) -> None:
+    def add_processing_item_path(self, recipe: Recipe, machine_num: int) -> list[ItemPath]:
         # レシピの入力に必要な全てのアイテムがエリア内に存在するか確認
         for recipe_input in recipe.inputs:
             recipe_input_required = recipe_input.amount * machine_num
@@ -35,13 +39,13 @@ class Area():
         # 渡されたレシピのアイテムパスを作成
         for recipe_input in recipe.inputs:
             self.sub_resource_amount(recipe_input.item, recipe_input.amount * machine_num, outputs)
-        return
+        return outputs
 
     def get_resource_amount(self, item: Item) -> float:
         return sum(resource.production_per_second for resource in (self.resources + self.inputs + self.processes) if resource.item == item)
 
     def sub_resource_amount(self, item: Item, amount: float, resource_use_children: list[ItemPath]) -> None:
-        for resource in (self.resources + self.inputs + self.processes):
+        for resource in (self.resources + self.processes + self.inputs):    # エリア内の素材を優先して消費する
             if resource.item == item and resource.available_production_per_second > 0:
                 amount = resource.use_production_per_second(amount, resource_use_children)
             if amount == 0:
