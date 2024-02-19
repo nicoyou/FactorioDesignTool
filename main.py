@@ -31,4 +31,7 @@ if __name__ == "__main__":
     area3.add_processing_item_path(get_main_recipe(Item.transport_belt), 15)
     area3.add_processing_item_path(get_main_recipe(Item.logistic_science_pack), 30)
 
+    area4 = world.create_area("Area4")
+    area4.add_processing_item_path_replenish_material(get_main_recipe(Item.logistic_science_pack), 30)
+
     world.export_factory_blueprint()

@@ -30,8 +30,17 @@ class ItemPath():
         else:
             result_amount -= self.available_production_per_second
             self.used_production_per_second += self.available_production_per_second
-        self.children += [ItemPathLink(row, amount - result_amount if i == 0 else 0) for i, row in enumerate(children)]
-        return result_amount    # 使い切れなかった分を返す
+
+        add_children = [ItemPathLink(row, amount - result_amount if i == 0 else 0) for i, row in enumerate(children)]   # 今回追加する ItemPathLink
+
+        for add_child in add_children:
+            for child in self.children:
+                if child.item_path.item == add_child.item_path.item:    # すでに同じアイテムに対しての ItemPathLink が存在する場合
+                    child.amount += add_child.amount                    # 既存の ItemPathLink に今回の使用数を追加する
+                    break
+            else:
+                self.children.append(add_child)                         # 存在しなかった場合は新たに ItemPathLink を追加する
+        return result_amount                                            # 消費しけれなかった分 ( 足りなかった分 ) を返す
 
     @property
     def node_id(self) -> str:
